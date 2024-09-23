@@ -1,0 +1,1 @@
+# plugins-yith-slider-for-page-builders
