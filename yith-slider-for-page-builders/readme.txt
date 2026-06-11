@@ -3,8 +3,8 @@
 Contributors: yithemes
 Tags: sliders, proteo, block, elementor, gutenberg, slider, yith, yit, yithemes
 Requires at least: 5.9
-Tested up to: 6.4
-Stable tag: 1.0.11
+Tested up to: 6.9
+Stable tag: 1.1.0
 Requires PHP: 7.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -60,6 +60,23 @@ Compatibility with all themes is impossible, because they are too many, but gene
 Yet, we can grant compatibility with themes developed by YITH, because they are constantly updated and tested with our plugins. Sometimes, especially when new versions are released, it might only require some time for them to be all updated, but you can be sure that they will be tested and will be working in a few days.
 
 == Changelog ==
+=  1.1.0 - Released on 11 Jun 2026 =
+* Security: complete broken access control fix for slide duplication (CVE-2025-68581), including nonce verification and per-post capability checks
+* Security: harden save handlers with post type, revision, and capability validation
+* Security: validate parent slider when creating and saving slides
+* Security: restrict REST API access to authenticated editors; set yith_slider post type as non-public
+* Fix: background settings and slider options now save and load correctly on the slider edit screen
+* Fix: Gutenberg block editor compatibility on modern WordPress (script dependencies, ServerSideRender, iframe canvas styles)
+* Fix: Gutenberg block renders all slides on the front-end with slick navigation and controls
+* Fix: unified slider rendering between shortcode and block; load slick assets only when needed
+* Fix: bullet navigation dots visible on the front-end
+* Fix: red dotted slider height guide restored in the slide editor
+* New: slide thumbnail previews in the slider edit screen with background image, color, and scaled block content render
+* Dev: replace raw SQL with safe post meta copy in slide duplication; improve sanitization and escaping across admin output
+
+=  1.0.12 - Released on 09 Jan 2025 =
+* Fix: yith_slider_duplicate_slide function access control
+
 =  1.0.11 - Released on 21 Feb 2024 =
 * New: support for WordPress 6.4
 

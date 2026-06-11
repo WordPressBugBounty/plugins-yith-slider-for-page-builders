@@ -106,7 +106,7 @@ class YITH_Sliders_Metabox {
 				),
 				admin_url( 'post-new.php' )
 			);
-			$add_slide_button     = '<a class="button button-primary button-large" href="' . $add_slide_button_url . '">' . esc_html__( 'Add new slide', 'yith-slider-for-page-builders' ) . '</a>';
+			$add_slide_button     = '<a class="button button-primary button-large" href="' . esc_url( $add_slide_button_url ) . '">' . esc_html__( 'Add new slide', 'yith-slider-for-page-builders' ) . '</a>';
 
 			$args     = array(
 				'post_parent' => $post->ID,
@@ -118,31 +118,30 @@ class YITH_Sliders_Metabox {
 				'meta_key'    => 'slide_order',
 			);
 			$children = get_children( $args );
+			$index    = 0;
 
 			foreach ( $children as $child ) {
+				++$index;
 				$id             = $child->ID;
 				$edit_link      = get_edit_post_link( $id );
 				$delete_link    = get_delete_post_link( $id, '' );
-				$duplicate_link = admin_url( 'post.php?action=yith_slider_duplicate_slide&post=' . $id );
-				$thumbnail_url  = get_the_post_thumbnail_url( $id, 'yith_slider_thumb' );
-				if ( ! $thumbnail_url ) {
-					$thumbnail_img = '<img width="300" src="' . YITH_SLIDER_FOR_PAGE_BUILDERS_URL . '/assets/slider-images/placeholder.png">';
-				} else {
-					$thumbnail_img = '<img src="' . $thumbnail_url . '">';
-				}
-				$bg_color = get_post_meta( $id, 'single_slide_background_color', true ) ? get_post_meta( $id, 'single_slide_background_color', true ) : '#ffffff';
+				$duplicate_link = wp_nonce_url(
+					admin_url( 'admin.php?action=yith_slider_duplicate_slide&post=' . absint( $id ) ),
+					'yith_slider_duplicate_slide_' . absint( $id )
+				);
+				$preview_thumb  = yith_slider_for_page_builders_render_slide_preview_thumb( $id, $post->ID, $index );
 
-				$edit_link      = '<a href="' . $edit_link . '" class="edit"><span>' . esc_attr__( 'Edit', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/edit - white.svg"></a>';
-				$duplicate_link = '<a href="' . $duplicate_link . '" class="duplicate"><span>' . esc_attr__( 'Duplicate', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/clone - white.svg"></a>';
-				$delete_link    = '<a href="' . $delete_link . '" class="delete"><span>' . esc_attr__( 'Delete', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/trash - white.svg"></a>';
-				$move_link      = '<a href="#" class="move"><span>' . esc_attr__( 'Drag to order', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/drag - white.svg"></a>';
+				$edit_link      = '<a href="' . esc_url( $edit_link ) . '" class="edit"><span>' . esc_attr__( 'Edit', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . esc_url( YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/edit - white.svg' ) . '"></a>';
+				$duplicate_link = '<a href="' . esc_url( $duplicate_link ) . '" class="duplicate"><span>' . esc_attr__( 'Duplicate', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . esc_url( YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/clone - white.svg' ) . '"></a>';
+				$delete_link    = '<a href="' . esc_url( $delete_link ) . '" class="delete"><span>' . esc_attr__( 'Delete', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . esc_url( YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/trash - white.svg' ) . '"></a>';
+				$move_link      = '<a href="#" class="move"><span>' . esc_attr__( 'Drag to order', 'yith-slider-for-page-builders' ) . '</span><img width="25" src="' . esc_url( YITH_SLIDER_FOR_PAGE_BUILDERS_URL . 'assets/slider-images/options/drag - white.svg' ) . '"></a>';
 
 				$slide_links = '<div class="slide-actions">' . $edit_link . $move_link . $duplicate_link . $delete_link . '<div>';
 
-				$output .= '<li data-order="" style="background-color:' . $bg_color . '">';
-				$output .= $thumbnail_img;
+				$output .= '<li data-order="" class="yith-slide-preview-item">';
+				$output .= $preview_thumb;
 				$output .= $slide_links;
-				$output .= '<input type="hidden" name="slide_order[]" value="' . $id . '"/>';
+				$output .= '<input type="hidden" name="slide_order[]" value="' . esc_attr( $id ) . '"/>';
 				$output .= '</li>';
 			}
 			echo '<ul class="yith-slider-slides-list">' . $output . '</ul>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -455,6 +454,10 @@ class YITH_Sliders_Metabox {
 			return;
 		}
 
+		if ( ! yith_slider_for_page_builders_can_save_post( $post_id, 'yith_slider' ) ) {
+			return;
+		}
+
 		foreach ( $this->fields as $field ) {
 			if ( isset( $_POST[ $field['id'] ] ) ) {
 				switch ( $field['type'] ) {
@@ -487,47 +490,59 @@ class YITH_Sliders_Metabox {
 		if ( ! isset( $_POST['yith_slider_control_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_nonce'] ) ), 'yith_slider_control_data' ) ) {
 			return;
 		}
-		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+
+		if ( ! yith_slider_for_page_builders_can_save_post( $post_id, 'yith_slider' ) ) {
 			return;
 		}
 
 		if ( isset( $_POST['slide_order'] ) && is_array( $_POST['slide_order'] ) ) {
 			foreach ( $_POST['slide_order'] as $index => $slide_id ) {
-				update_post_meta( $slide_id, 'slide_order', $index );
+				$slide_id = absint( $slide_id );
+				if ( ! $slide_id ) {
+					continue;
+				}
+				$slide = get_post( $slide_id );
+				if ( ! $slide || 'yith_slide' !== $slide->post_type || (int) $slide->post_parent !== (int) $post_id ) {
+					continue;
+				}
+				if ( ! current_user_can( 'edit_post', $slide_id ) ) {
+					continue;
+				}
+				update_post_meta( $slide_id, 'slide_order', absint( $index ) );
 			}
 		}
 		if ( isset( $_POST['yith_slider_control_animation_type'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_animation_type', esc_attr( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_animation_type'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_animation_type', sanitize_text_field( wp_unslash( $_POST['yith_slider_control_animation_type'] ) ) );
 		}
 		if ( isset( $_POST['yith_slider_control_navigation_style'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_navigation_style', esc_attr( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_navigation_style'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_navigation_style', sanitize_text_field( wp_unslash( $_POST['yith_slider_control_navigation_style'] ) ) );
 		}
 		if ( isset( $_POST['yith_slider_control_dots_navigation_style'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_dots_navigation_style', esc_attr( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_dots_navigation_style'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_dots_navigation_style', sanitize_text_field( wp_unslash( $_POST['yith_slider_control_dots_navigation_style'] ) ) );
 		}
 		if ( isset( $_POST['yith_slider_control_autoplay'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_autoplay', esc_attr( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_autoplay'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_autoplay', sanitize_text_field( wp_unslash( $_POST['yith_slider_control_autoplay'] ) ) );
 		} else {
-			update_post_meta( $post_id, 'yith_slider_control_autoplay', null );
+			delete_post_meta( $post_id, 'yith_slider_control_autoplay' );
 		}
 		if ( isset( $_POST['yith_slider_control_autoplay_timing'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_autoplay_timing', esc_attr( intval( wp_unslash( $_POST['yith_slider_control_autoplay_timing'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_autoplay_timing', absint( wp_unslash( $_POST['yith_slider_control_autoplay_timing'] ) ) );
 		}
 		if ( isset( $_POST['yith_slider_control_container_max_width'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_container_max_width', esc_attr( intval( wp_unslash( $_POST['yith_slider_control_container_max_width'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_container_max_width', absint( wp_unslash( $_POST['yith_slider_control_container_max_width'] ) ) );
 		}
 		if ( isset( $_POST['yith_slider_control_heigth'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_heigth', esc_attr( intval( wp_unslash( $_POST['yith_slider_control_heigth'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_heigth', absint( wp_unslash( $_POST['yith_slider_control_heigth'] ) ) );
 		}
 		if ( isset( $_POST['yith_slider_control_infinite_sliding'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_infinite_sliding', esc_attr( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_infinite_sliding'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_infinite_sliding', sanitize_text_field( wp_unslash( $_POST['yith_slider_control_infinite_sliding'] ) ) );
 		} else {
-			update_post_meta( $post_id, 'yith_slider_control_infinite_sliding', null );
+			delete_post_meta( $post_id, 'yith_slider_control_infinite_sliding' );
 		}
 		if ( isset( $_POST['yith_slider_control_slider_layout'] ) ) {
-			update_post_meta( $post_id, 'yith_slider_control_slider_layout', esc_attr( sanitize_text_field( wp_unslash( $_POST['yith_slider_control_slider_layout'] ) ) ) );
+			update_post_meta( $post_id, 'yith_slider_control_slider_layout', sanitize_text_field( wp_unslash( $_POST['yith_slider_control_slider_layout'] ) ) );
 		} else {
-			update_post_meta( $post_id, 'yith_slider_control_slider_layout', null );
+			delete_post_meta( $post_id, 'yith_slider_control_slider_layout' );
 		}
 	}
 }

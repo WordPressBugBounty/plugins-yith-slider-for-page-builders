@@ -8,6 +8,7 @@ html {
 .yith-slider {
 	margin-bottom: 50px;
 	overflow: hidden;
+	position: relative;
 }
 
 .yith-slider.fullscreen .yith-slider-slide {
@@ -146,22 +147,33 @@ body.rtl .yith-slider .yith-slider-nav.slide-next {
 }
 
 .yith-slider .yith-slider-dots {
-	margin: -50px 0 0;
+	position: absolute;
+	bottom: 20px;
+	left: 0;
+	right: 0;
+	width: 100%;
+	margin: 0;
 	padding: 0;
 	list-style-type: none;
 	text-align: center;
-	position: relative;
+	z-index: 11;
+	pointer-events: none;
 }
 
 .yith-slider .yith-slider-dots li {
 	display: inline-block;
-	margin: 0 7.5px 15px;
+	margin: 0 7.5px;
+	pointer-events: auto;
+	vertical-align: middle;
 }
 
 .yith-slider .yith-slider-dots li button {
 	outline: none;
 	margin: 0;
 	padding: 0;
+	cursor: pointer;
+	line-height: 0;
+	font-size: 0;
 	transition: all ease 0.3s;
 }
 
@@ -177,6 +189,7 @@ body.rtl .yith-slider .yith-slider-nav.slide-next {
 	width: 15px;
 	border-radius: 50%;
 	border: 2px solid #fff;
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .yith-slider .yith-slider-dots.style-1 li.slick-active button,
@@ -198,6 +211,7 @@ body.rtl .yith-slider .yith-slider-nav.slide-next {
 	width: 15px;
 	border-radius: 0;
 	border: 2px solid #fff;
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .yith-slider .yith-slider-dots.style-2 li.slick-active button,
@@ -208,8 +222,8 @@ body.rtl .yith-slider .yith-slider-nav.slide-next {
 }
 
 .yith-slider .yith-slider-dots.style-3 li button {
-	background: #ffffff;
-	background-color: #ffffff;
+	background: rgba(255, 255, 255, 0.85);
+	background-color: rgba(255, 255, 255, 0.85);
 	display: block;
 	overflow: hidden;
 	text-indent: 100%;
@@ -219,6 +233,7 @@ body.rtl .yith-slider .yith-slider-nav.slide-next {
 	width: 50px;
 	border-radius: 2px;
 	border: none;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .yith-slider .yith-slider-dots.style-3 li.slick-active button,

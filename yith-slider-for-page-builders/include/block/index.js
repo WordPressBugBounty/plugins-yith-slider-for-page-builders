@@ -1,52 +1,82 @@
-const {registerBlockType} = wp.blocks; //Blocks API
-const {createElement} = wp.element; //React.createElement
-const {__} = wp.i18n; //translation functions
-const {InspectorControls} = wp.blockEditor; //Block inspector wrapper
-const {TextControl,SelectControl,PanelBody,ServerSideRender} = wp.components; //WordPress form inputs and server-side renderer
+( function( blocks, element, i18n, blockEditor, components, serverSideRender ) {
+	const { registerBlockType } = blocks;
+	const { createElement } = element;
+	const { __ } = i18n;
+	const { InspectorControls } = blockEditor;
+	const { SelectControl, PanelBody } = components;
+	const ServerSideRender = serverSideRender;
 
-registerBlockType( 'yith-slider-for-page-builders/slider-block', {
-	title: __( 'YITH Slider for page builders' ), // Block title.
-	category:  __( 'media', 'yith-slider-for-page-builders' ), //category
-	attributes:  {
-		slider : {
-			default: '',
+	const slidersData = window.yith_slider_for_page_builders_block_localized_array || {};
+	const sliderOptions = [
+		{
+			label: __( 'Select a slider', 'yith-slider-for-page-builders' ),
+			value: '',
 		},
-	},
-	icon: 'cover-image',
-	edit(props){
-		const attributes =  props.attributes;
-		const setAttributes =  props.setAttributes;
-		//Function to update slider id attribute
-		function changeId(slider){
-			setAttributes({slider});
-		}
-		
-		//Display block preview and UI
-        let yithSliderBlock = createElement('div', {}, [
-            createElement( ServerSideRender, {
-                block: 'yith-slider-for-page-builders/slider-block',
-                attributes: attributes,
-                key: 1
-            } ),
-            createElement( InspectorControls, { key: 2 },
-                [
-                    createElement( PanelBody, { key:attributes.slider }, [
-                        createElement( SelectControl, {
-                            value: attributes.slider,
-                            options: yith_slider_for_page_builders_block_localized_array.slidersArray,
-                            label: __( 'Slider to show', 'yith-slider-for-page-builders' ),
-                            multiple: false,
-                            onChange: changeId,
-                            key : attributes.slider
-                        } ),
-                    ] )
-                ]
-            )
-        ] );
+	].concat(
+		Array.isArray( slidersData.slidersArray )
+			? slidersData.slidersArray.map( function( item ) {
+				return {
+					label: item.label,
+					value: String( item.value ),
+				};
+			} )
+			: []
+	);
 
-		return yithSliderBlock;
-	},
-	save(){
-		return null;//save has to exist. This all we need
-	}
-});
+	registerBlockType( 'yith-slider-for-page-builders/slider-block', {
+		title: __( 'YITH Slider for page builders', 'yith-slider-for-page-builders' ),
+		category: 'media',
+		attributes: {
+			slider: {
+				type: 'string',
+				default: '',
+			},
+		},
+		icon: 'cover-image',
+		edit( props ) {
+			const attributes = props.attributes;
+			const setAttributes = props.setAttributes;
+
+			function changeId( slider ) {
+				setAttributes( { slider: String( slider ) } );
+			}
+
+			return createElement(
+				'div',
+				{},
+				createElement( ServerSideRender, {
+					block: 'yith-slider-for-page-builders/slider-block',
+					attributes: attributes,
+					key: 'preview',
+				} ),
+				createElement(
+					InspectorControls,
+					{ key: 'inspector' },
+					createElement(
+						PanelBody,
+						{
+							title: __( 'Slider settings', 'yith-slider-for-page-builders' ),
+							initialOpen: true,
+						},
+						createElement( SelectControl, {
+							value: attributes.slider,
+							options: sliderOptions,
+							label: __( 'Slider to show', 'yith-slider-for-page-builders' ),
+							onChange: changeId,
+						} )
+					)
+				)
+			);
+		},
+		save() {
+			return null;
+		},
+	} );
+}(
+	window.wp.blocks,
+	window.wp.element,
+	window.wp.i18n,
+	window.wp.blockEditor,
+	window.wp.components,
+	window.wp.serverSideRender
+) );

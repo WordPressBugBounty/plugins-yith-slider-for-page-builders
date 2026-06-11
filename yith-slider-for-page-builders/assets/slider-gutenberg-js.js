@@ -7,6 +7,22 @@ jQuery( function( $ ) {
 
 	var notice_message = sliderHeightString + ' ' + sliderHeigth + 'px.\n\n' + changeSliderHeightMessage;
 
+	function getEditorStylesWrapper() {
+		var iframe = document.querySelector( 'iframe[name="editor-canvas"]' );
+		if ( iframe && iframe.contentDocument ) {
+			return iframe.contentDocument.querySelector( '.editor-styles-wrapper' );
+		}
+
+		return document.querySelector( '.editor-styles-wrapper' );
+	}
+
+	function setEditorBackground( property, value ) {
+		var editorWrapper = getEditorStylesWrapper();
+		if ( editorWrapper ) {
+			editorWrapper.style[ property ] = value;
+		}
+	}
+
 	( function ( wp ) {
 		wp.data.dispatch( 'core/notices' ).createNotice(
 			'warning yith-slider-for-page-builders-height-notice',
@@ -51,22 +67,22 @@ jQuery( function( $ ) {
 	$('#single_slide_background_color').wpColorPicker({
 
 		change: function (event, ui) {
-			var color = ui.color.toString();
-			$('.block-editor-writing-flow').css('background-color', color);
+			setEditorBackground( 'backgroundColor', ui.color.toString() );
 		},
 
 		clear: function (event) {
-			$('.block-editor-writing-flow').css('background-color', yith_slider_for_page_builders_localized_array.sliderBgColor);
+			setEditorBackground( 'backgroundColor', yith_slider_for_page_builders_localized_array.sliderBgColor || '' );
 		}
 	});
 
 	$(document).ajaxComplete(function (event, xhr, settings) {
 		var background_image = $('.editor-post-featured-image__preview').find('img').attr('src');
-		$('.block-editor-writing-flow').css('background-image', 'url(' + background_image + ')');		
+		setEditorBackground( 'backgroundImage', background_image ? 'url(' + background_image + ')' : 'none' );
 	});
 
 	$(document).on('click', '.editor-post-featured-image .is-destructive', function(){
-		$('.block-editor-writing-flow').css('background-image', yith_slider_for_page_builders_localized_array.sliderBgImage);
+		var sliderBgImage = yith_slider_for_page_builders_localized_array.sliderBgImage;
+		setEditorBackground( 'backgroundImage', sliderBgImage ? 'url(' + sliderBgImage + ')' : 'none' );
 	});
 
 });

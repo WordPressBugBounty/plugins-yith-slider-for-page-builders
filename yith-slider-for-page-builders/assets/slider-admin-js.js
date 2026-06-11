@@ -2,7 +2,7 @@
 
 	// Add Color Picker to all inputs that have 'color-field' class.
 	$(function () {
-		$('#single_slide_background_color').wpColorPicker();
+		$('.color-field').wpColorPicker();
 	});
 	var slider = $('#yith_slider_control_autoplay_timing'),
 		slider2 = $('#yith_slider_control_container_max_width'),
